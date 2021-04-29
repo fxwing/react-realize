@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+
+
+  请求空闲回调 执行优先级低的任务
+  <script>
+    //全局属性  告诉浏览器  现在执行callback函数  优先级比较低   空闲的时间执行
+    //但是如果到了超时时间  必须立即执行
+    // window.requestIdleCallback(callback, { timeout: 1000 })
+    // 睡眠函数
+    function sleep(delay) {
+      for (let start = Date.now(); Date.now() - start <= delay;) { }
+    }
+    // console.time('sleep')
+    // sleep(2000)
+    // console.timeEnd('sleep')
+
+    // fiber  将任务分成多个小任务  每次执行一个任务 执行完成后看有没剩余时间  如果有剩余时间  继续执行  如果没有任务 控制权交给浏览器
+
+
+    let  startTime = Date.now()
+    const works = [
+      () => {
+        console.log('第一个任务开始');
+        // while (true) { }//  卡在这里  这个一直执行不玩
+        sleep(20);
+        console.log('第一个任务结束');
+      },
+      () => {
+        console.log('第二个任务开始');
+        sleep(20);
+        console.log('第二个任务结束');
+      },
+      () => {
+        console.log('第三个任务开始');
+        sleep(20);
+        console.log('第三个任务结束');
+        console.log(Date.now()  - startTime)
+      },
+    ]
+
+    //  超过1000ms  必须执行
+    window.requestIdleCallback(workLoop, { timeout: 1000 });
+    // deadline 一个对象有两个参数
+    // remain 剩余的意思
+    // timeRemaining()  返回此帧 还剩多少时间供用户使用
+    // didTimeout 此任务是否超时  boolean
+    function workLoop(deadLine) {
+      console.log(`本帧剩余时间${deadLine.timeRemaining()}`)
+      // 此帧的剩余时间大于0
+      while (
+        (deadLine.timeRemaining() > 0 || deadLine.didTimeout === true)
+        && works.length
+      ) {
+        performUnitOfWork()
+      } // 如果没有剩余时间  需要放弃任务控制权 执行权交给浏览器
+      // console.log('while阻断后年的代码')
+      if (works.length > 0) {  // 如果有任务  重新调度  让浏览器在空余时间执行workloop
+        window.requestIdleCallback(workLoop, { timeout: 1000 });
+      }
+    }
+    function performUnitOfWork() {
+      works.shift()()
+    }
+
+  </script>
+
+</body>
+
+</html>

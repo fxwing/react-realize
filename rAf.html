@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=<device-width>, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <div id="process-bar" style="background-color: aquamarine;height: 10px;width: 0px;"></div>
+  <button id="btn">点击</button>
+  <script>
+    // 一个帧具体包括  输入输入事件(mouse，input，click)  执行js  开始帧(reasize,scroll)   requestAnimationFrame 渲染布局
+    // 执行时间长 阻塞了 会卡顿
+    // js引擎和渲染引擎在一个线程内,  GUI渲染和js执行时互斥的
+    // 60hz   1000ms 执行60次  每次就是1000/60m  每帧16.6ms
+    // 异步，重绘渲染之前执行
+    const processDiv = document.querySelector('#process-bar');
+    const btn = document.querySelector('#btn');
+    let start;
+    function process() {
+      processDiv.style.width = processDiv.offsetWidth + 1 + 'px';
+      processDiv.innerHTML = processDiv.offsetWidth + '%'
+      if (processDiv.offsetWidth < 100) {
+        let current = Date.now();
+        // 大约在16.6ms
+        console.log(current - start);  // 开始执行到真正执行的时间差
+        // requestAnimationFrame执行的时间差
+        start = current;
+        requestAnimationFrame(process)
+      }
+    }
+    btn.onclick = () => {
+      processDiv.style.width = 0 + 'px';
+      let current = Date.now()
+      start = current;
+      requestAnimationFrame(process)
+    }
+  </script>
+</body>
+
+</html>
